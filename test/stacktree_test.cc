@@ -6,25 +6,38 @@
 #include <gtest/gtest.h>
 #include <fox/stack_tree.hpp>
 
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4834 )
+#endif
+
 namespace fox
 {
+	// This is needed for consistent stack-trace level generation for unit-tests.
+#ifdef _MSC_VER
+#define NOINLINE __declspec(noinline)
+#else
+#define NOINLINE __attribute__((noinline))
+#endif
+
+
 	template<class T>
 	class stacktree_test : public ::testing::Test
 	{
 	protected:
-		void SetUp() override
+		NOINLINE void SetUp() override
 		{
 			stacktrace_0 = st_func0();
 			stacktrace_1 = st_func1();
 		}
 
 	private:
-		[[nodiscard]] static std::stacktrace st_func0()
+		NOINLINE [[nodiscard]] static std::stacktrace st_func0()
 		{
 			return std::stacktrace::current();
 		}
 
-		[[nodiscard]] static std::stacktrace st_func1()
+		NOINLINE [[nodiscard]] static std::stacktrace st_func1()
 		{
 			return std::stacktrace::current();
 		}
@@ -779,3 +792,7 @@ namespace fox
 		EXPECT_NE(b_old, b);
 	}
 }
+
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif

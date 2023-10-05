@@ -1,5 +1,5 @@
-#ifndef FOX_STACK_TREE_HPP_
-#define FOX_STACK_TREE_HPP_
+#ifndef FOX_STACKTREE_HPP_
+#define FOX_STACKTREE_HPP_
 #pragma once
 
 #include <map>
@@ -20,19 +20,55 @@
 
 namespace fox
 {
-	template<class T = void>
+	/**
+	 * \brief Extension of std::stacktrace_entry that carries value with it.
+	 * \tparam T The type of the element
+	 */
+	template<class T>
 	class stacktree_entry : public std::stacktrace_entry
 	{
 		T value_;
 
 	public:
-		stacktree_entry() = default;
+		/**
+		 * \brief Default constructor. Creates an empty stacktree_entry
+		 */
+		stacktree_entry() : value_{} {}
+
+		/**
+		 * \brief Constructs the stacktree_entry from std::stacktrace_entry and the value
+		 * \param se std::stracktrace_entry to initialzie stacktree_entry with
+		 * \param value the value to initialize stacktree_entry with
+		 */
 		stacktree_entry(const std::stacktrace_entry& se, const T& value = {})
 			: std::stacktrace_entry(se), value_(value) {}
-		stacktree_entry(const stacktree_entry&) = default;
-		stacktree_entry(stacktree_entry&&)
+
+		/**
+		 * \brief Copy constructor. Constructs stacktree_entry from a copy.
+		 * \param other another stacktree_entry to be used as a source to initialize the stacktree_entry with
+		 */
+		stacktree_entry(const stacktree_entry& other) = default;
+
+		/**
+		 * \brief Move constructor. Constructs stacktree_entry by moving contents from
+		 * \param other other another stacktree_entry to be used as a source to initialize the stacktree_entry with
+		 */
+		stacktree_entry(stacktree_entry&& other)
 			noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_constructible_v<std::stacktrace_entry>) = default;
-		stacktree_entry& operator=(const stacktree_entry&) = default;
+
+
+		/**
+		 * \brief Copy assignment operator.
+		 * \param other another stacktree_entry to be used as a source to initialize the stacktree_entry with
+		 * \return *this
+		 */
+		stacktree_entry& operator=(const stacktree_entry& other) = default;
+
+		/**
+		 * \brief Replaces the underlying stacktrace_entry with the copy
+		 * \param other another stacktrace_entry to be used as a source to initialize the stacktree_entry with
+		 * \return *this
+		 */
 		stacktree_entry& operator=(const std::stacktrace_entry& other)
 		{
 			std::stacktrace_entry::operator=(other);
@@ -40,55 +76,107 @@ namespace fox
 			return *this;
 		}
 
-		stacktree_entry& operator=(stacktree_entry&&)
+		/**
+		 * \brief Move assignment operator.
+		 * \param other another stacktree_entry to be used as a source to initialize the stacktree_entry with
+		 * \return *this
+		 */
+		stacktree_entry& operator=(stacktree_entry&& other)
 			noexcept(std::is_nothrow_move_assignable_v<T> && std::is_nothrow_move_assignable_v<std::stacktrace_entry>) = default;
+
+		/**
+		 * \brief Destructs the stacktree_entry.
+		 */
 		~stacktree_entry() noexcept = default;
 
 	public:
+		/**
+		 * \brief Converts stacktree_entry to stored-type reference.
+		 */
 		explicit operator const T&() const noexcept
 		{
 			return value_;
 		}
 
+		/**
+		 * \brief Converts stacktree_entry to stored-type reference.
+		 */
 		explicit operator T& () noexcept
 		{
 			return value_;
 		}
 
+		/**
+		 * \brief Getter for stored value.
+		 * \return Reference to stored value.
+		 */
 		const T& value() const noexcept
 		{
 			return value_;
 		}
 
+		/**
+		 * \brief Getter for stored value.
+		 * \return Reference to stored value.
+		 */
 		T& value() noexcept
 		{
 			return value_;
 		}
 	};
 
+	/**
+	 * \brief Type trait checking if type T is an instantiation of std::basic_stacktree<Allocator>
+	 */
 	template<class T> struct is_basic_stacktrace : std::false_type {};
+
+	/**
+	 * \brief Type trait checking if type T is an instantiation of std::basic_stacktree<Allocator>
+	 */
 	template<class Allocator> struct is_basic_stacktrace<std::basic_stacktrace<Allocator>> : std::true_type {};
 
-	template<class T>
-	struct is_scoped_allocator_adaptor : std::false_type {};
+	/**
+	 * \brief Type trait checking if type T is an instantiation of std::scoped_allocator_adaptor<Outer, Inner...>
+	 */
+	template<class T> struct is_scoped_allocator_adaptor : std::false_type {};
 
-	template<class Outer, class... Inner>
-	struct is_scoped_allocator_adaptor<std::scoped_allocator_adaptor<Outer, Inner...>>: std::true_type {};
+	/**
+	 * \brief Type trait checking if type T is an instantiation of std::scoped_allocator_adaptor<Outer, Inner...>
+	 */
+	template<class Outer, class... Inner> struct is_scoped_allocator_adaptor<std::scoped_allocator_adaptor<Outer, Inner...>> : std::true_type {};
 
+	/**
+	 * \brief The basic_stacktree class template represents a tree structure with attached data composed of multiple basic_stacktraces
+	 * \tparam T Type to be stored by basic_stacktree nodes.
+	 * \tparam Allocator An allocator that is used to acquire/release memory and to construct/destroy the elements in that memory. 
+	 */
 	template<class T, std::copy_constructible Allocator>
 		requires std::same_as<T, void> || std::copyable<T>
 	class basic_stacktree
 	{
 	public:
+		/**
+		 * \brief std::stacktrace_entry if T is void or stacktree_entry<T>
+		 */
 		using value_type = 
 			std::conditional_t<std::is_same_v<T, void>,
 				std::stacktrace_entry,
 				stacktree_entry<T>
 		>;
 
+		/**
+		 * \brief std::stacktrace_entry
+		 */
 		using key_type = std::stacktrace_entry;
+
+		/**
+		 * \brief T
+		 */
 		using mapped_type = T;
 
+		/**
+		 * \brief Allocator
+		 */
 		using allocator_type = Allocator;
 
 	private:
@@ -217,19 +305,39 @@ namespace fox
 		node root_node_;
 
 	public:
+		/**
+		 * \brief Default constructor. Constructs an empty basic_stacktree with a default-constructed allocator.
+		 */
 		basic_stacktree()
 		requires std::is_default_constructible_v<node>
 			= default;
 
+		/**
+		 * \brief Constructs an empty basic_stacktree with the given allocator alloc.
+		 * \param alloc allocator to use for all memory allocations of this container
+		 */
 		explicit basic_stacktree(const allocator_type& alloc)
 			: root_node_(nullptr, {}, node_allocator_type{alloc}) {}
 
+		/**
+		 * \brief Copy constructor. Constructs the basic_stacktree with the copy of the contents of other.
+		 * \param other another container to be used as source to initialize the elements of the container with
+		 */
 		basic_stacktree(const basic_stacktree& other) = default;
 
+		/**
+		 * \brief Move constructor. Constructs the basic_stacktree with the contents of other using move semantics. 
+		 * \param other another container to be used as source to initialize the elements of the container with
+		 */
 		basic_stacktree(basic_stacktree&& other) noexcept(
 			std::allocator_traits<allocator_type>::is_always_equal::value
 			) = default;
 
+		/**
+		 * \brief Constructs the container with the copy of the contents of other, using alloc as the allocator.
+		 * \param other another container to be used as source to initialize the elements of the container with
+		 * \param alloc allocator to use for all memory allocations of this container
+		 */
 		basic_stacktree(
 			const basic_stacktree& other,
 			const allocator_type& alloc
@@ -240,6 +348,11 @@ namespace fox
 			scoped_node_allocator_type{ node_allocator_type{ alloc } }
 		) {}
 
+		/**
+		 * \brief Allocator-extended move constructor.
+		 * \param other another container to be used as source to initialize the elements of the container with
+		 * \param alloc allocator to use for all memory allocations of this container
+		 */
 		basic_stacktree(
 			basic_stacktree&& other,
 			const allocator_type& alloc
@@ -249,6 +362,13 @@ namespace fox
 		)
 		{}
 
+		/**
+		 * \brief Constructs the basic_stacktree with the contents of the range [first, last).
+		 * \tparam InputIt LegacyInputIterator which is indirect convertible to T
+		 * \param first iterator to begin of the range to copy from
+		 * \param last iterator to end of the range to copy from
+		 * \param alloc allocator to use for all memory allocations of this container
+		 */
 		template<std::input_iterator InputIt>
 		basic_stacktree(InputIt first, InputIt last, const allocator_type& alloc = allocator_type())
 			requires is_basic_stacktrace<std::iter_value_t<InputIt>>::value
@@ -257,6 +377,12 @@ namespace fox
 			this->assign(first, last);
 		}
 
+		/**
+		 * \brief Constructs the container with the contents of the initializer list init.
+		 * \tparam StacktraceAlloc Stacktrace's Allocator
+		 * \param il initializer list to initialize the elements of the container with
+		 * \param alloc allocator to use for all memory allocations of this container
+		 */
 		template<class StacktraceAlloc>
 		basic_stacktree(
 			std::initializer_list<std::basic_stacktrace<StacktraceAlloc>> il,
@@ -264,6 +390,12 @@ namespace fox
 		)
 			: basic_stacktree(std::begin(il), std::end(il), alloc) {}
 
+		/**
+		 * \brief Constructs the container with the contents of the range rg.
+		 * \tparam R input_range whose elements are convertible to T
+		 * \param rg a container compatible range, that is, an input_range whose elements are convertible to T
+		 * \param alloc allocator to use for all memory allocations of this container
+		 */
 		template<std::ranges::input_range R>
 		basic_stacktree(
 			std::from_range_t,
@@ -273,14 +405,30 @@ namespace fox
 		requires is_basic_stacktrace<std::ranges::range_value_t<R>>::value
 			: basic_stacktree(std::begin(rg), std::end(rg), alloc) {}
 
+		/**
+		 * \brief Copy assignment operator.
+		 * \param other another container to use as data source
+		 * \return *this
+		 */
 		basic_stacktree& operator=(const basic_stacktree& other) = default;
 
+		/**
+		 * \brief Move assignment operator. Replaces the contents with those of other using move semantics.
+		 * \param other another container to use as data source
+		 * \return *this
+		 */
 		basic_stacktree& operator=(basic_stacktree&& other)
 			noexcept(
 				std::allocator_traits<allocator_type>::is_always_equal::value
 				)
 		= default;
 
+		/**
+		 * \brief Replaces the contents with those identified by initializer list il.
+		 * \tparam StacktraceAlloc std::basic_stacktrace's allocator
+		 * \param il initializer list to use as data source
+		 * \return *this
+		 */
 		template<class StacktraceAlloc>
 		basic_stacktree& operator=(std::initializer_list<std::basic_stacktrace<StacktraceAlloc>> il)
 		{
@@ -289,15 +437,29 @@ namespace fox
 			return *this;
 		}
 
+		/**
+		 * \brief Destructs the basic_stacktree.
+		 */
 		~basic_stacktree() = default;
 
 	public:
+		/**
+		 * \brief Replaces the contents with the elements from the initializer list il.
+		 * \tparam StacktraceAlloc std::basic_stacktrace's allocator
+		 * \param il initializer list to copy the values from
+		 */
 		template<class StacktraceAlloc>
 		void assign(std::initializer_list<std::basic_stacktrace<StacktraceAlloc>> il)
 		{
 			return this->assign(std::begin(il), std::end(il));
 		}
 
+		/**
+		 * \brief Replaces the contents with copies of those in the range [first, last).
+		 * \tparam InputIt LegacyInputIterator which is indirect convertible to T
+		 * \param first iterator to begin of the range to copy from
+		 * \param last iterator to end of the range to copy from
+		 */
 		template<std::input_iterator InputIt>
 		void assign(InputIt first, InputIt last)
 			requires is_basic_stacktrace<std::iter_value_t<InputIt>>::value
@@ -306,6 +468,11 @@ namespace fox
 			this->insert(first, last);
 		}
 
+		/**
+		 * \brief Replaces elements in the basic_stacktree with a copy of each element in rg.
+		 * \tparam R input_range whose elements are convertible to T
+		 * \param rg a container compatible range, that is, an input_range whose elements are convertible to T
+		 */
 		template<std::ranges::input_range R>
 		void assign_range(R&& rg)
 			requires is_basic_stacktrace<std::ranges::range_value_t<R>>::value
@@ -313,6 +480,10 @@ namespace fox
 			return this->assign(std::begin(rg), std::end(rg));
 		}
 
+		/**
+		 * \brief Returns the allocator associated with the container.
+		 * \return The associated allocator.
+		 */
 		[[nodiscard]] allocator_type get_allocator() const noexcept
 		{
 			if constexpr(!is_scoped_allocator)
@@ -557,37 +728,68 @@ namespace fox
 		};
 
 	public:
+		/**
+		 * \brief contiguous_iterator to value_type
+		 */
 		using iterator = iterator_implementation<value_type>;
+
+		/**
+		 * \brief contiguous_iterator to const value_type
+		 */
 		using const_iterator = iterator_implementation<const value_type>;
 
 		static_assert(std::random_access_iterator<iterator>);
 		static_assert(std::random_access_iterator<const_iterator>);
 
+		/**
+		 * \brief Returns an iterator to the first element of the first level of the basic_stacktree.
+		 * \return Iterator to the first element of the first level.
+		 */
 		[[nodiscard]] iterator begin() noexcept
 		{
 			return iterator(std::addressof(root_node_));
 		}
 
+		/**
+		 * \brief Returns an iterator to the last element of the first level of the basic_stacktree.
+		 * \return Iterator to the last element of the first level.
+		 */
 		[[nodiscard]] iterator end() noexcept
 		{
 			return iterator(std::addressof(root_node_), std::in_place);
 		}
 
+		/**
+		 * \brief Returns an iterator to the first element of the first level of the basic_stacktree.
+		 * \return Iterator to the first element of the first level.
+		 */
 		[[nodiscard]] const_iterator begin() const noexcept
 		{
 			return const_iterator(std::addressof(root_node_));
 		}
 
+		/**
+		 * \brief Returns an iterator to the last element of the first level of the basic_stacktree.
+		 * \return Iterator to the last element of the first level.
+		 */
 		[[nodiscard]] const_iterator end() const noexcept
 		{
 			return const_iterator(std::addressof(root_node_), std::in_place);
 		}
 
+		/**
+		 * \brief Returns an iterator to the first element of the first level of the basic_stacktree.
+		 * \return Iterator to the first element of the first level.
+		 */
 		[[nodiscard]] const_iterator cbegin() const noexcept
 		{
 			return const_iterator(std::addressof(root_node_));
 		}
 
+		/**
+		 * \brief Returns an iterator to the last element of the first level of the basic_stacktree.
+		 * \return Iterator to the last element of the first level.
+		 */
 		[[nodiscard]] const_iterator cend() const noexcept
 		{
 			return const_iterator(std::addressof(root_node_), std::in_place);
@@ -668,6 +870,14 @@ namespace fox
 		}
 
 	public:
+		/**
+		 * \brief Inserts std::basic_stacktrace<Allocator> into basic_stacktree and invokes function f on the inserted elements.
+		 * \tparam UnaryFunction Unary function compatible with T& (if T is not void) or value_type&.
+		 * \tparam StackTraceAllocator std::basic_stacktrace's allocator.
+		 * \param stacktrace std::basic_stacktrace to insert into basic_stacktree.
+		 * \param f Unary function which will modify inserted values.
+		 * \return Iterator to the lowest inserted node.
+		 */
 		template<class UnaryFunction, class StackTraceAllocator>
 		iterator insert(const std::basic_stacktrace<StackTraceAllocator>& stacktrace, UnaryFunction f)
 		requires (std::is_same_v<T, void> && std::invocable<UnaryFunction, T&>) || std::invocable<UnaryFunction, value_type&>
@@ -675,6 +885,12 @@ namespace fox
 			return insert_internal<true>(this->begin(), stacktrace, f);
 		}
 
+		/**
+		 * \brief Inserts std::basic_stacktrace<Allocator> into basic_stacktree.
+		 * \tparam StackTraceAllocator std::basic_stacktrace's allocator.
+		 * \param stacktrace std::basic_stacktrace to insert into basic_stacktree.
+		 * \return Iterator to the lowest inserted node.
+		 */
 		template<class StackTraceAllocator>
 		iterator insert(const std::basic_stacktrace<StackTraceAllocator>& stacktrace)
 		{
@@ -682,6 +898,13 @@ namespace fox
 			return insert_internal<false>(this->begin(), stacktrace, v);
 		}
 
+		/**
+		 * \brief Inserts the copies of those in the range [first, last).
+		 * \tparam InputIt LegacyInputIterator which is indirect convertible to T.
+		 * \param first iterator to begin of the range to copy from.
+		 * \param last iterator to end of the range to copy from.
+		 * \return Iterator to the lowest inserted node.
+		 */
 		template<std::input_iterator InputIt>
 		iterator insert(InputIt first, InputIt last)
 			requires is_basic_stacktrace<std::iter_value_t<InputIt>>::value
@@ -690,12 +913,23 @@ namespace fox
 			return insert_range_internal<false>(first, last, this->begin(), v);
 		}
 
+		/**
+		 * \brief Inserts  the initializer list il.
+		 * \tparam StackTraceAllocator Stacktrace's Allocator
+		 * \param il initializer list to insert the elements of the container with
+		 * \return Iterator to the lowest inserted node.
+		 */
 		template<class StackTraceAllocator>
 		iterator insert(std::initializer_list<std::basic_stacktrace<StackTraceAllocator>> il)
 		{
 			return this->insert(std::begin(il), std::end(il));
 		}
 
+		/**
+		 * \brief Inserts the copies of those in the range rg.
+		 * \tparam R input_range whose elements are convertible to T
+		 * \param rg a container compatible range, that is, an input_range whose elements are convertible to T
+		 */
 		template<std::ranges::input_range R>
 		void insert_range(R&& rg)
 		requires is_basic_stacktrace<std::ranges::range_value_t<R>>::value
@@ -703,6 +937,11 @@ namespace fox
 			this->insert(std::begin(rg), std::end(rg));
 		}
 
+		/**
+		 * \brief Erases the specified elements from the container. Removes the element at pos.
+		 * \param pos iterator to the element to remove
+		 * \return Iterator following the last removed element.
+		 */
 		iterator erase(const_iterator pos)
 		{
 			// Const-cast node ptr
@@ -719,6 +958,12 @@ namespace fox
 			return iterator(p_node, std::distance(std::begin(p_node->children), r));
 		}
 
+		/**
+		 * \brief Erases the specified elements from the container. Range of elements to remove.
+		 * \param first iterator to begin of the range to erase.
+		 * \param last iterator to end of the range to erase.
+		 * \return Iterator following the last removed element.
+		 */
 		iterator erase(const_iterator first, const_iterator last)
 		{
 			// Const-cast node ptr
@@ -738,11 +983,18 @@ namespace fox
 		}
 
 	public:
+		/**
+		 * \brief Checks if the container has no elements.
+		 * \return true if the container is empty, false otherwise.
+		 */
 		[[nodiscard]] bool empty() const noexcept
 		{
 			return std::empty(this->root_node_.children);
 		}
 
+		/**
+		 * \brief Erases all elements from the basic_stacktree.
+		 */
 		void clear() noexcept
 		{
 			this->root_node_.stacktrace = {};
