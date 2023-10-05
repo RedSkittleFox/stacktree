@@ -19,7 +19,7 @@ ntdll!RtlUserThreadStart+0x28 : 1050376 Bytes
 #include <thread>
 #include <print>
 
-#include <fox/stack_tree.hpp>
+#include <fox/stacktree.hpp>
 
 // Just a dummy
 struct global_allocator

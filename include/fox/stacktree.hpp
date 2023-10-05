@@ -521,16 +521,19 @@ namespace fox
 			void assert_children_in_range(difference_type modifier) const // Assert not set index, strong exception guarantee
 			{
 				difference_type sum = this->index_ + modifier;
-				auto e = std::out_of_range("Attempting to access out of range element via iterator.");;
+#define THROW_OUT_OF_RANGE \
+	throw std::out_of_range("Attempting to access out of range element via iterator.")
 
 				if (modifier > 0 && sum < this->index_) // overflow
-					throw e;
+					THROW_OUT_OF_RANGE;
 
 				if (modifier < 0 && sum > this->index_) // underflow
-					throw e;
+					THROW_OUT_OF_RANGE;
 
-				if (node_ == nullptr || sum < 0 || sum > std::size(node_->children))
-					throw e;
+				if (node_ == nullptr || sum < 0 || sum > std::ssize(node_->children))
+					THROW_OUT_OF_RANGE;
+
+#undef THROW_OUT_OF_RANGE
 			}
 
 			void assert_valid_access() const
@@ -548,7 +551,7 @@ namespace fox
 			iterator_implementation(node_type* node, difference_type index = 0) noexcept // begin
 				: node_(node), index_(index) {}
 
-			iterator_implementation(node_type* node, std::in_place_t end_tag) noexcept // begin
+			iterator_implementation(node_type* node, std::in_place_t) noexcept // begin
 				: node_(node), index_((node == nullptr ? 0 : node->children.size())) {}
 		public:
 			iterator_implementation() noexcept

@@ -30,7 +30,8 @@ endif()
 include(FetchContent)
 
 add_subdirectory("include")
-add_subdirectory("test")
+
+add_library(fox::stacktree ALIAS stacktree)
 
 option(sample ON)
 option(test ON)

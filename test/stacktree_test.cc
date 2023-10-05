@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include <gtest/gtest.h>
-#include <fox/stack_tree.hpp>
+#include <fox/stacktree.hpp>
 
 #ifdef _MSC_VER
 #pragma warning( push )
