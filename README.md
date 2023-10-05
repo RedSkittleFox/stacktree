@@ -115,8 +115,8 @@ git clone https://github.com/RedSkittleFox/stacktree.git
 mkdir stacktree/output
 cd stakctree/output
 cmake -Dsample=ON -Dtest=on .. 
-
-
+```
+or
 ```cmake
 include(FetchContent)
 FetchContent_Declare(
@@ -126,7 +126,8 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(stacktree)
 
-...
+```
 
+```
 target_link_libraries(your_library PUBLIC fox::stacktree)
 ```
