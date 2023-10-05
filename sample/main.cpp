@@ -17,7 +17,6 @@ ntdll!RtlUserThreadStart+0x28 : 1050376 Bytes
 #include <fstream>
 #include <string>
 #include <thread>
-#include <print>
 
 #include <fox/stacktree.hpp>
 
