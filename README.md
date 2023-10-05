@@ -14,7 +14,6 @@ Features:
 #include <fstream>
 #include <string>
 #include <thread>
-#include <print>
 
 #include <fox/stack_tree.hpp>
 
