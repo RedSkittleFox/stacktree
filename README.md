@@ -1,6 +1,6 @@
 [![CMake MSVC Build and Test](https://github.com/RedSkittleFox/stacktree/actions/workflows/cmake-msvc-build.yml/badge.svg)](https://github.com/RedSkittleFox/stacktree/actions/workflows/cmake-msvc-build.yml)
 # stacktree
-A way of storing and representing stacktrace's as a tree with attached data!
+A way of storing and representing stacktraces as a tree with attached data!
 
 Features:
 * Follows STL design - provides iterators and custom allocator support. 
